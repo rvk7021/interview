@@ -49,7 +49,7 @@ export default function Instruction() {
 
   return (
     <div>
-      <div className="h-[61px]">Navigation Bar</div>
+      <div className="text-4xl  font-bold text-blue-900 w-1 mx-auto">Interview</div>
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* grid 1 */}
         <div className="bg-gray-800 flex flex-col items-center">
@@ -107,4 +107,4 @@ export default function Instruction() {
       </div>
     </div>
   );
-}
+            }
