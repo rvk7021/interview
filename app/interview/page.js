@@ -53,7 +53,6 @@ export default function InterviewPage() {
       recorder.start();
       setMediaRecorder(recorder);
     } else {
-      console.error("Screen or camera stream is not available.");
     }
 
     return () => {
@@ -80,39 +79,17 @@ export default function InterviewPage() {
 
   return (
     <div className="h-screen w-screen bg-gray-900 grid grid-cols-1 md:grid-cols-2 text-white">
-      {/* Left Side: Question Section (shifted up) */}
+      {/* Left Side: Question and Answer Section */}
       <div className="flex flex-col justify-start items-center px-6 py-4 bg-gray-800 space-y-6">
+        {/* Question Section */}
         <div className="w-full bg-gray-700 p-6 rounded-lg shadow-md text-center">
           <h1 className="text-2xl font-bold mb-4">Question</h1>
           <p className="text-lg">
             Sort the array [5, 2, 9, 1, 5, 6] in ascending order.
           </p>
         </div>
-        <div className="w-full bg-gray-700 p-6 rounded-lg shadow-md">
-          <h1 className="text-xl font-bold mb-4">Your Video Feed</h1>
-          <video
-            autoPlay
-            muted
-            playsInline
-            ref={videoRef}
-            className="border border-gray-700 rounded-lg w-full h-auto"
-          ></video>
-        </div>
-      </div>
-
-      {/* Right Side: Share Screen and Answer Section */}
-      <div className="flex flex-col px-6 py-4 bg-gray-900">
-        {/* Share Screen */}
-        <div className="w-full bg-gray-700 rounded-lg shadow-md mb-6">
-          <video
-            autoPlay
-            playsInline
-            ref={screenRef}
-            className="border border-gray-700 rounded-lg w-full h-full"
-          ></video>
-        </div>
-
-        {/* Answer Text and Chat Display */}
+        
+        {/* Answer Text Section */}
         <div className="w-full bg-gray-700 p-6 rounded-lg shadow-md">
           <h1 className="text-2xl font-bold mb-4">Your Answer</h1>
           <textarea
@@ -127,6 +104,30 @@ export default function InterviewPage() {
           >
             Send
           </button>
+        </div>
+      </div>
+
+      {/* Right Side: Video Feed, Screen Share, and Chat */}
+      <div className="flex flex-col px-6 py-4 bg-gray-900">
+        {/* Video Feed and Screen Share */}
+        <div className="flex space-x-4 mb-6">
+          <div className="w-1/2 bg-gray-700 rounded-lg shadow-md">
+            <video
+              autoPlay
+              muted
+              playsInline
+              ref={videoRef}
+              className="border border-gray-700 rounded-lg w-full h-full"
+            ></video>
+          </div>
+          <div className="w-1/2 bg-gray-700 rounded-lg shadow-md">
+            <video
+              autoPlay
+              playsInline
+              ref={screenRef}
+              className="border border-gray-700 rounded-lg w-full h-full"
+            ></video>
+          </div>
         </div>
 
         {/* Chat Display */}
