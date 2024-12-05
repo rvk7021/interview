@@ -1,5 +1,7 @@
 "use client";
+
 import { useEffect, useState, useRef } from "react";
+import { useMedia } from "../context/MediaContext"; // Import context
 
 export default function InterviewPage() {
   const [recordingStream, setRecordingStream] = useState(null);
@@ -12,71 +14,54 @@ export default function InterviewPage() {
   const videoRef = useRef(null);
   const screenRef = useRef(null);
 
+  const { screenStream, cameraStream } = useMedia(); // Access screenStream and cameraStream from context
+
   // Start recording video and screen-sharing
   useEffect(() => {
-    const startScreenShare = async () => {
-      try {
-        // Screen sharing
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-        });
-        if (screenRef.current) {
-          screenRef.current.srcObject = screenStream;
-        }
-
-        // Webcam and microphone
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
-        setRecordingStream(stream);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
-        const recorder = new MediaRecorder(stream);
-        recorder.ondataavailable = (event) => {
-          setChunks((prev) => [...prev, event.data]); // Ensure chunks is updated correctly
-        };
-
-        recorder.onstop = async () => {
-          const blob = new Blob(chunks, { type: "video/webm" });
-          const formData = new FormData();
-          formData.append("file", blob);
-
-          // Send the recorded file to the API
-          setIsLoading(true);
-          try {
-            await fetch("/api/upload", {
-              method: "POST",
-              body: formData,
-            });
-          } catch (error) {
-            console.error("Error uploading the recording:", error);
-          }
-          setIsLoading(false);
-          setCompleted(true);
-        };
-
-        recorder.start();
-        setMediaRecorder(recorder);
-      } catch (error) {
-        console.error("Error accessing media devices:", error);
-        alert(
-          "There was an error accessing your camera or screen. Please check your settings and try again."
-        );
+    if (screenStream && cameraStream) {
+      if (screenRef.current) {
+        screenRef.current.srcObject = screenStream;
       }
-    };
+      if (videoRef.current) {
+        videoRef.current.srcObject = cameraStream;
+      }
 
-    startScreenShare();
+      const recorder = new MediaRecorder(cameraStream);
+      recorder.ondataavailable = (event) => {
+        setChunks((prev) => [...prev, event.data]); // Ensure chunks are updated correctly
+      };
+
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const formData = new FormData();
+        formData.append("file", blob);
+
+        // Send the recorded file to the API
+        setIsLoading(true);
+        try {
+          await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+        } catch (error) {
+          console.error("Error uploading the recording:", error);
+        }
+        setIsLoading(false);
+        setCompleted(true);
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+    } else {
+      console.error("Screen or camera stream is not available.");
+    }
 
     return () => {
       if (recordingStream) {
         recordingStream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [chunks, recordingStream]); // Include chunks in the dependency array
+  }, [screenStream, cameraStream, chunks, recordingStream]); // Updated dependencies
 
   const stopRecording = () => {
     if (mediaRecorder) {

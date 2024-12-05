@@ -1,14 +1,17 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Import router for navigation
 import { LuClock } from "react-icons/lu";
 import { FaYahoo } from "react-icons/fa";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { FaArrowRight } from "react-icons/fa";
+import { useMedia } from "./context/MediaContext"; // Import useMedia context
 
 export default function Instruction() {
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const { setScreenStream, setCameraStream } = useMedia(); // Access context methods
   const router = useRouter(); // Initialize the router instance
 
   useEffect(() => {
@@ -26,15 +29,18 @@ export default function Instruction() {
 
   const handleStartNow = async () => {
     try {
+      // Request screen-sharing permissions and set it in the context
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
       });
-      console.log("Screen sharing started", screenStream);
+      setScreenStream(screenStream); // Set screen stream in context
+
+      // Request camera and microphone permissions, then set it in the context
+      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setCameraStream(cameraStream); // Set camera stream in context
 
       // Navigate to /interview route
       router.push("/interview");
-
-      // You can pass the screen stream through a global state, context, or URL if needed.
     } catch (error) {
       console.error("Error starting screen sharing:", error);
       setErrorMessage("Unable to start screen sharing. Please try again.");
