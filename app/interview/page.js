@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 import { useMedia } from "../context/MediaContext"; // Import context
 
 export default function InterviewPage() {
@@ -9,12 +10,27 @@ export default function InterviewPage() {
   const [chunks, setChunks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const [answerText, setAnswerText] = useState("");  // State to store the answer text
-  const [chatMessages, setChatMessages] = useState([]);  // State to store chat messages
+  const [answerText, setAnswerText] = useState(""); // State to store the answer text
+  const [chatMessages, setChatMessages] = useState([]); // State to store chat messages
+  const [timeLeft, setTimeLeft] = useState(30); // Timer state
+
   const videoRef = useRef(null);
   const screenRef = useRef(null);
 
   const { screenStream, cameraStream } = useMedia(); // Access screenStream and cameraStream from context
+  const router = useRouter(); // Initialize the router for navigation
+
+  // Timer functionality
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      handleEndInterview(); // Automatically end the interview when time runs out
+    } else {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer); // Cleanup timer
+    }
+  }, [timeLeft]);
 
   // Start recording video and screen-sharing
   useEffect(() => {
@@ -48,26 +64,33 @@ export default function InterviewPage() {
         }
         setIsLoading(false);
         setCompleted(true);
+
+        // Stop all streams and navigate to the homepage
+        stopStreams();
+        router.push("/"); // Redirect to homepage
       };
 
       recorder.start();
       setMediaRecorder(recorder);
-    } else {
     }
+  }, [screenStream, cameraStream, chunks]); // Updated dependencies
 
-    return () => {
-      if (recordingStream) {
-        recordingStream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [screenStream, cameraStream, chunks, recordingStream]); // Updated dependencies
+  const stopStreams = () => {
+    // Stop camera and screen streams
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+    }
+    if (screenStream) {
+      screenStream.getTracks().forEach((track) => track.stop());
+    }
+  };
 
-  const stopRecording = () => {
+  const handleEndInterview = () => {
     if (mediaRecorder) {
-      mediaRecorder.stop();
-    }
-    if (recordingStream) {
-      recordingStream.getTracks().forEach((track) => track.stop());
+      mediaRecorder.stop(); // Stop the recording
+    } else {
+      stopStreams(); // Ensure streams are stopped even if recording didn't start
+      router.push("/"); // Redirect to homepage
     }
   };
 
@@ -79,8 +102,14 @@ export default function InterviewPage() {
 
   return (
     <div className="h-screen w-screen bg-gray-900 grid grid-cols-1 md:grid-cols-2 text-white">
-      {/* Left Side: Question and Answer Section */}
+      {/* Left Side: Question, Timer, and Answer Section */}
       <div className="flex flex-col justify-start items-center px-6 py-4 bg-gray-800 space-y-6">
+        {/* Timer Section */}
+        <div className="w-full bg-gray-700 p-4 rounded-lg shadow-md text-center">
+          <h1 className="text-2xl font-bold mb-2">Time Left</h1>
+          <p className="text-3xl font-semibold">{timeLeft}s</p>
+        </div>
+
         {/* Question Section */}
         <div className="w-full bg-gray-700 p-6 rounded-lg shadow-md text-center">
           <h1 className="text-2xl font-bold mb-4">Question</h1>
@@ -88,7 +117,7 @@ export default function InterviewPage() {
             Sort the array [5, 2, 9, 1, 5, 6] in ascending order.
           </p>
         </div>
-        
+
         {/* Answer Text Section */}
         <div className="w-full bg-gray-700 p-6 rounded-lg shadow-md">
           <h1 className="text-2xl font-bold mb-4">Your Answer</h1>
@@ -146,6 +175,14 @@ export default function InterviewPage() {
             ))}
           </div>
         </div>
+
+        {/* End Interview Button */}
+        <button
+          onClick={handleEndInterview}
+          className="mt-4 bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded-lg self-center"
+        >
+          End Interview
+        </button>
       </div>
 
       {/* Loader Screen */}
